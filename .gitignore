@@ -1,4 +1,5 @@
 videos/
 __pycache__/
+env/
 nohup.out
 log.txt

@@ -10,8 +10,13 @@ from datetime import datetime
 from scipy.signal import convolve
 from picamera2 import Picamera2
 import logging
+import resource
 
 logging.basicConfig(level=logging.INFO)
+
+def limit_memory(max_memory_mb):
+    max_memory_byte = max_memory_mb * 1024 * 1024
+    resource.setrlimit(resource.RLIMIT_RSS, (max_memory_byte, max_memory_byte))
 
 @atexit.register
 def when_exit():
@@ -41,15 +46,16 @@ def schmidt_rectification(data, low_threshold, high_threshold):
                 output[i] = 1
     return output, slices
 
-def dump_video(frames: list[np.ndarray], filename: str):
+def dump_video(frames: list[np.ndarray], times, filename: str):
     frame = frames[0]
     frame_height = frame.shape[0]
     frame_width = frame.shape[1]
-    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+    fourcc = cv2.VideoWriter_fourcc(*'H264')
     writer = cv2.VideoWriter(filename, fourcc, 10.0, (frame_width, frame_height), isColor=True)
 
-    for frame in frames:
+    for frame, time in zip(frames, times):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        cv2.putText(frame, str(time), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
         writer.write(frame)
 
     writer.release()
@@ -93,9 +99,10 @@ def cache_handler(q: Queue, chunk_size: int, save_root: str):
                 real_start = start * gap_ratio
                 real_end = end * gap_ratio
                 dump_frames = frames[real_start: real_end + 1]
-                filename = f'{times[real_start]}-{times[real_end]}.mp4'
+                dump_times = times[real_start: real_end + 1]
+                filename = f'{times[real_start]}-{times[real_end]}.avi'
                 save_path = os.path.join(save_root, filename)
-                dump_video(dump_frames, save_path)
+                dump_video(dump_frames, dump_times, save_path)
                 # print(f'保存视频到 {save_path}')
                 logging.info(f'保存视频到 {save_path}')
             frames.clear()
@@ -114,7 +121,7 @@ def start_streaming(streaming_status):
         camera.stop_recording()
 
 if __name__ == '__main__':
-
+    limit_memory(512)
 
     save_root = 'videos'
     os.makedirs(save_root, exist_ok=True)
@@ -123,7 +130,7 @@ if __name__ == '__main__':
     camera_height = 480
 
     camera = Picamera2()
-    camera.video_configuration.controls.FrameRate = 10.0
+    camera.video_configuration.controls.FrameRate = 60.0
     camera_config = camera.create_preview_configuration(
         main={
             'size': (camera_width, camera_height)
@@ -155,4 +162,5 @@ if __name__ == '__main__':
         if streaming_status.qsize() != 0:
             queue_streaming.put(frame)
 
+        # print("queue_detect: ", queue_detect.qsize())
         # print("queue_streaming: ", queue_streaming.qsize())

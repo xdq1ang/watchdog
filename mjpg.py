@@ -37,7 +37,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 while True:
                     frame: np.ndarray = queue.get()
                     frame = frame_handler(frame)
-                    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                    # frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
                     _, frame = cv2.imencode('.jpg', frame)
                     frame_bytes = frame.tobytes()
                     self.wfile.write(b'--FRAME\r\n')
