@@ -31,7 +31,7 @@ class BooleanObject:
         self.value = bool(value)
 
 def default_handler(frame):
-    time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    time = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     cv2.putText(frame, str(time), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
     return frame

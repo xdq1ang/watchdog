@@ -50,7 +50,7 @@ def dump_video(frames: list[np.ndarray], times, filename: str):
     frame = frames[0]
     frame_height = frame.shape[0]
     frame_width = frame.shape[1]
-    fourcc = cv2.VideoWriter_fourcc(*'H264')
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
     writer = cv2.VideoWriter(filename, fourcc, 10.0, (frame_width, frame_height), isColor=True)
 
     for frame, time in zip(frames, times):
@@ -78,7 +78,7 @@ def cache_handler(q: Queue, chunk_size: int, save_root: str):
         camera_size = frame.shape[0] * frame.shape[1]
 
         frames.append(frame)
-        times.append(now.strftime('%Y_%m_%d_%H_%M_%S'))
+        times.append(now.strftime('%Y年%m月%d日%H:%M:%S'))
 
         if iterations % gap_ratio == 0:
             bg_mask = bg_model.apply(frame)
@@ -100,7 +100,7 @@ def cache_handler(q: Queue, chunk_size: int, save_root: str):
                 real_end = end * gap_ratio
                 dump_frames = frames[real_start: real_end + 1]
                 dump_times = times[real_start: real_end + 1]
-                filename = f'{times[real_start]}-{times[real_end]}.avi'
+                filename = f'{times[real_start]}~{times[real_end]}.avi'
                 save_path = os.path.join(save_root, filename)
                 dump_video(dump_frames, dump_times, save_path)
                 # print(f'保存视频到 {save_path}')
