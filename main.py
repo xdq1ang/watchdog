@@ -114,7 +114,7 @@ def start_streaming(streaming_status):
         address = ('', 7123)
         StreamingHandler.streaming_status = streaming_status
         server = StreamingServer(address, StreamingHandler)
-        logging.info('通过 http://lagrange.local:7123/index.html 来访问推流')
+        logging.info('通过 http://192.168.6.149:7123/index.html 来访问推流')
         server.serve_forever()
     finally:
         logging.info('结束推流')
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     camera.configure(camera_config)
     camera.start()
 
-    chunk_size = 300
+    chunk_size = 50
     queue_detect = Queue(maxsize=chunk_size)
     queue_streaming = Queue(maxsize=chunk_size)
 
